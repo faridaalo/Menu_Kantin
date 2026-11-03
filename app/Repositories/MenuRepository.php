@@ -113,18 +113,16 @@ class MenuRepository
 
     public function codeExists(string $code, ?int $ignoreId = null): bool
     {
-        return $this->uniqueValueExists('kode_menu', $code, $ignoreId);
+        return $this->valueExists('SELECT COUNT(*) FROM menu WHERE kode_menu = :value', $code, $ignoreId);
     }
 
     public function barcodeExists(string $barcode, ?int $ignoreId = null): bool
     {
-        return $this->uniqueValueExists('barcode', $barcode, $ignoreId);
+        return $this->valueExists('SELECT COUNT(*) FROM menu WHERE barcode = :value', $barcode, $ignoreId);
     }
 
-    private function uniqueValueExists(string $column, string $value, ?int $ignoreId): bool
+    private function valueExists(string $sql, string $value, ?int $ignoreId): bool
     {
-        $sql = sprintf('SELECT COUNT(*) FROM menu WHERE %s = :value', $column);
-
         if ($ignoreId !== null) {
             $sql .= ' AND id <> :ignore_id';
         }
@@ -168,7 +166,7 @@ class MenuRepository
     /**
      * @param  array{kode_menu: string, nama_menu: string, barcode: string, harga: int, kategori_menu_id: int}  $data
      */
-    public function update(int $id, array $data): bool
+    public function update(int $id, array $data): void
     {
         $statement = $this->pdo()->prepare(
             'UPDATE menu
@@ -189,8 +187,6 @@ class MenuRepository
         $statement->bindValue(':updated_at', date('Y-m-d H:i:s'), PDO::PARAM_STR);
         $statement->bindValue(':id', $id, PDO::PARAM_INT);
         $statement->execute();
-
-        return $statement->rowCount() > 0;
     }
 
     public function delete(int $id): bool
